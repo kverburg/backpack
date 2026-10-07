@@ -1,0 +1,3 @@
+{"appId":"nl.kmverburg.backpack","appName":"Backpack","webDir":"../public",
+"server":{"url":"https://backpack.kmverburg.nl","androidScheme":"https"},
+"android":{"backgroundColor":"#eef0f2"}}

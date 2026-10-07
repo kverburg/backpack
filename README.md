@@ -55,3 +55,27 @@ Every push to `main` deploys the app. Pull requests only run checks.
 
 The KV namespace id in `wrangler.toml` is not a secret, so it is committed. The API token must never be committed.
 Note: while `kmverburg.nl` is still moving to Cloudflare, the deploy step can fail on the custom domain route. It will work once the domain is active.
+
+## Android
+Two ways to get Backpack on a phone. Both load the live site, so a normal `wrangler deploy` updates the app everywhere. You only rebuild the APK for native changes (icon, name, Capacitor upgrade).
+
+### A. Install as an app (no build)
+Open https://backpack.kmverburg.nl in Chrome on Android > menu > Install app (or Add to Home screen). Log in with the email code once.
+
+### B. APK via CI (`.github/workflows/android-release.yml`)
+`mobile/` holds a Capacitor shell that opens https://backpack.kmverburg.nl in a WebView. CI generates the Android project, builds it, and attaches the APK to a GitHub Release.
+
+One-time signing setup (so updates install over older versions):
+
+    keytool -genkeypair -v -keystore backpack.jks -alias backpack -keyalg RSA -keysize 2048 -validity 10000
+    base64 -w0 backpack.jks      # macOS: base64 -i backpack.jks
+
+Keep `backpack.jks` and its passwords somewhere safe (a password manager). If you lose it you cannot ship updates over the installed app. Never commit it.
+Add GitHub secrets: `ANDROID_KEYSTORE_BASE64` (the base64 output), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_PASSWORD`, `ANDROID_KEY_ALIAS` (`backpack`).
+Without these secrets the workflow still runs and produces a debug-signed APK, which is fine for a first test.
+
+Release: `git tag v1.0.0 && git push origin v1.0.0`. The APK appears under the repository's Releases (or Actions > run > Artifacts when started by hand).
+Install on the phone: download the APK, allow "install unknown apps" for your browser/files app, open it.
+
+Login note: Cloudflare Access asks for an email code inside the app. To avoid frequent re-login, raise the session length in Zero Trust > Access > Applications > Backpack > Session duration (for example 1 month).
+Play Store release needs an AAB and a $25 developer account. Not covered here.
