@@ -1,0 +1,16 @@
+name = "backpack"
+main = "src/worker.js"
+compatibility_date = "2025-01-01"
+
+# Only reachable via your domain (so Cloudflare Access always applies)
+workers_dev = false
+preview_urls = false
+routes = [{ pattern = "backpack.kmverburg.nl", custom_domain = true }]
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[[kv_namespaces]]
+binding = "BACKPACK"
+id = "b1d82e75-96fb-4fb8-a36a-2fd9d8bd7b5d"

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Backpack</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--bg:#eef0f2;--surface:#fff;--ink:#16242b;--mute:#62727a;--line:#d5dade;--pine:#1f4a40;--onpine:#fff;--sun:#f2c230;--onsun:#16242b;--danger:#b3412f;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a1e;--surface:#17262b;--ink:#e8eef0;--mute:#8fa1a8;--line:#2a3d44;--pine:#3f8f7c;--onpine:#0b1519;--danger:#e0816f}}
+:root[data-theme="dark"]{--bg:#0f1a1e;--surface:#17262b;--ink:#e8eef0;--mute:#8fa1a8;--line:#2a3d44;--pine:#3f8f7c;--onpine:#0b1519;--danger:#e0816f}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Instrument Sans",system-ui,sans-serif}
+h1,h2,h3{font-family:"Bricolage Grotesque","Instrument Sans",sans-serif;line-height:1.1;margin:0}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 80px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px}
+.logo{font:800 34px "Bricolage Grotesque",sans-serif;letter-spacing:-1px}
+.logo span{background:var(--sun);color:var(--onsun);padding:0 8px;border-radius:8px;margin-right:4px}
+nav{display:flex;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px}
+nav button{border:0;background:none;color:var(--mute);font:600 15px inherit;font-family:inherit;padding:8px 16px;border-radius:9px;cursor:pointer}
+nav button[aria-pressed=true]{background:var(--pine);color:var(--onpine)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:18px}
+.panel h2{font-size:22px;margin-bottom:12px}
+label.f{display:block;font-weight:600;font-size:14px;margin-bottom:12px}
+input[type=text],input[type=number],select{display:block;width:100%;margin-top:4px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);font:inherit}
+.row{display:flex;gap:12px;flex-wrap:wrap}.row>*{flex:1 1 130px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 14px}
+.chip{border:1.5px solid var(--line);background:var(--bg);color:var(--ink);border-radius:99px;padding:6px 14px;font:500 14px inherit;font-family:inherit;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--pine);border-color:var(--pine);color:var(--onpine)}
+.btn{border:0;border-radius:10px;padding:11px 18px;font:600 15px inherit;font-family:inherit;cursor:pointer;background:var(--pine);color:var(--onpine)}
+.btn.sun{background:var(--sun);color:var(--onsun)}.btn.ghost{background:none;color:var(--mute);border:1px solid var(--line)}
+.btn.sm{padding:6px 11px;font-size:13px}
+.hint{color:var(--mute);font-size:14px}
+.sentence{margin:0 0 16px;padding:10px 14px;border-left:4px solid var(--sun);background:var(--bg);border-radius:0 9px 9px 0;font-size:15px}
+.trip{display:flex;align-items:center;gap:12px;justify-content:space-between;padding:12px 0;border-top:1px solid var(--line)}
+.trip:first-of-type{border-top:0}
+.trip b{font-size:17px}
+.bar{height:8px;background:var(--bg);border-radius:9px;overflow:hidden;margin:10px 0 18px}
+.bar i{display:block;height:100%;background:var(--pine);transition:width .25s}
+.cat{margin-bottom:16px}.cat h3{font-size:17px;margin-bottom:6px;color:var(--pine)}
+.li{display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--line);cursor:pointer}
+.li input{width:22px;height:22px;accent-color:var(--pine);flex:none}
+.li .q{margin-left:auto;font-weight:600;background:var(--bg);border-radius:8px;padding:1px 10px;min-width:36px;text-align:center}
+.li.done span{text-decoration:line-through;color:var(--mute)}
+.item{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid var(--line)}
+.item .t{flex:1}.item small{display:block;color:var(--mute)}
+.x{color:var(--danger)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><div class="logo"><span>back</span>pack</div>
+<nav><button data-tab="trips">Trips</button><button data-tab="items">My items</button></nav></header>
+<div id="status" class="hint" role="status" style="margin-bottom:12px"></div>
+<main id="app"></main>
+</div>
+<script>
+const KEY='backpack-v1';
+const uid=()=>Math.random().toString(36).slice(2,9);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const seed=()=>({
+ tags:['Beach / hot','City','Hiking','Winter'],
+ items:[
+  {id:uid(),name:'Passport',cat:'Documents',mode:'fixed',qty:1,every:1,cap:0,tags:[]},
+  {id:uid(),name:'Phone charger',cat:'Electronics',mode:'fixed',qty:1,every:1,cap:0,tags:[]},
+  {id:uid(),name:'Toothbrush',cat:'Toiletries',mode:'fixed',qty:1,every:1,cap:0,tags:[]},
+  {id:uid(),name:'Underwear',cat:'Clothes',mode:'per',qty:1,every:1,cap:10,tags:[]},
+  {id:uid(),name:'Socks',cat:'Clothes',mode:'per',qty:1,every:1,cap:10,tags:[]},
+  {id:uid(),name:'T-shirts',cat:'Clothes',mode:'per',qty:1,every:2,cap:7,tags:[]},
+  {id:uid(),name:'Swim shorts',cat:'Clothes',mode:'fixed',qty:2,every:1,cap:0,tags:['Beach / hot']},
+  {id:uid(),name:'Sunscreen',cat:'Toiletries',mode:'fixed',qty:1,every:1,cap:0,tags:['Beach / hot']},
+  {id:uid(),name:'Hiking boots',cat:'Clothes',mode:'fixed',qty:1,every:1,cap:0,tags:['Hiking']},
+  {id:uid(),name:'Warm jacket',cat:'Clothes',mode:'fixed',qty:1,every:1,cap:0,tags:['Winter']}
+ ],trips:[]});
+let S=seed(),rev=0,ready=false,dirty=false,timer;
+const setStatus=m=>{const e=document.getElementById('status');if(e)e.textContent=m};
+const api=(method,body)=>fetch('/api/state',{method,headers:{'Content-Type':'application/json'},body:body&&JSON.stringify(body)});
+async function load(){
+ if(dirty)return;
+ try{const r=await api('GET');if(!r.ok)throw 0;const j=await r.json();rev=j.rev;if(j.data&&j.data.items)S=j.data;ready=true;setStatus('')}
+ catch(e){setStatus('Cannot reach the server. Changes are not saved.')}
+}
+async function push(){
+ if(!ready){dirty=false;return}
+ try{const r=await api('PUT',{rev,data:S});const j=await r.json();dirty=false;
+  if(r.status===409){S=j.data||S;rev=j.rev;setStatus('Someone else changed the lists at the same time. Check your last edit.');render()}
+  else if(r.ok){rev=j.rev;setStatus('')}else throw 0}
+ catch(e){dirty=false;setStatus('Cannot reach the server. Changes are not saved.')}
+}
+const save=()=>{dirty=true;clearTimeout(timer);timer=setTimeout(push,300)};
+const ui={tab:'trips',open:null,draft:{name:'',days:7,tags:[]},edit:null};
+const qtyFor=(it,d)=>{let q=it.mode==='fixed'?it.qty:it.qty*Math.ceil(d/Math.max(1,it.every));return it.mode==='per'&&it.cap>0?Math.min(q,it.cap):q};
+const describe=it=>{
+ let r=it.mode==='fixed'?`${it.qty} per trip`:`${it.qty} per ${it.every>1?it.every+' days':'day'}${it.cap>0?`, max ${it.cap}`:''}`;
+ return r+' · '+(it.tags.length?'only on '+it.tags.join(', '):'every trip')};
+const sentence=it=>{
+ const q=Math.max(1,+it.qty||1);
+ if(it.mode==='fixed')return `Pack <b>${q}</b> on every trip, however long it is.`;
+ const ev=Math.max(1,+it.every||1),cap=+it.cap||0;
+ const per=ev>1?`${ev} days`:'day';
+ const ex=d=>qtyFor({...it,qty:q,every:ev,cap},d);
+ return `Pack <b>${q} per ${per}</b>, ${cap>0?`with a maximum of <b>${cap}</b>`:'with <b>no maximum</b>'}. A 7-day trip gets ${ex(7)}, a 14-day trip gets ${ex(14)}.`};
+const gen=t=>S.items.filter(it=>!it.tags.length||it.tags.some(g=>t.tags.includes(g)))
+ .map(it=>({id:it.id,name:it.name,cat:it.cat||'Other',qty:qtyFor(it,t.days)}));
+const group=list=>{const m={};list.forEach(x=>(m[x.cat]=m[x.cat]||[]).push(x));return Object.entries(m)};
+
+function tripsView(){
+ if(ui.open){const t=S.trips.find(x=>x.id===ui.open);if(t)return listView(t);ui.open=null}
+ const d=ui.draft;
+ const preview=gen(d).length;
+ return `<section class="panel"><h2>Plan a trip</h2>
+ <div class="row"><label class="f">Trip name<input type="text" id="tn" value="${esc(d.name)}" placeholder="Lisbon, June"></label>
+ <label class="f">Days<input type="number" id="td" min="1" max="365" value="${d.days}"></label></div>
+ <div class="f" style="margin-bottom:0">What kind of trip?</div>
+ <div class="chips">${S.tags.map(g=>`<button class="chip" data-act="dtag" data-v="${esc(g)}" aria-pressed="${d.tags.includes(g)}">${esc(g)}</button>`).join('')||'<span class="hint">Add trip types under My items.</span>'}</div>
+ <button class="btn sun" data-act="gen">Make packlist · ${preview} items</button></section>
+ <section class="panel"><h2>Your trips</h2>${S.trips.length?S.trips.map(t=>{
+  const n=t.list.length,c=t.list.filter(x=>t.checked[x.id]).length;
+  return `<div class="trip"><div><b>${esc(t.name||'Untitled trip')}</b><div class="hint">${t.days} days${t.tags.length?' · '+esc(t.tags.join(', ')):''} · ${c}/${n} packed</div></div>
+  <div><button class="btn sm" data-act="open" data-v="${t.id}">Open</button> <button class="btn sm ghost x" data-act="deltrip" data-v="${t.id}" aria-label="Delete trip">Delete</button></div></div>`}).join(''):'<p class="hint">No trips yet. Plan one above and your list appears here.</p>'}</section>`}
+
+function listView(t){
+ const n=t.list.length,c=t.list.filter(x=>t.checked[x.id]).length;
+ return `<div class="top"><button class="btn sm ghost" data-act="back">Back</button>
+ <div><button class="btn sm ghost" data-act="refresh">Update from items</button> <button class="btn sm ghost" data-act="copy">Copy list</button></div></div>
+ <section class="panel"><h2>${esc(t.name||'Untitled trip')}</h2>
+ <div class="hint">${t.days} days${t.tags.length?' · '+esc(t.tags.join(', ')):''} · ${c} of ${n} packed</div>
+ <div class="bar"><i style="width:${n?c/n*100:0}%"></i></div>
+ ${group(t.list).map(([cat,xs])=>`<div class="cat"><h3>${esc(cat)}</h3>${xs.map(x=>`<label class="li ${t.checked[x.id]?'done':''}"><input type="checkbox" data-act="chk" data-v="${x.id}" ${t.checked[x.id]?'checked':''}><span>${esc(x.name)}</span><b class="q">${x.qty}×</b></label>`).join('')}</div>`).join('')||'<p class="hint">Nothing matches this trip.</p>'}
+ </section>`}
+
+function itemsView(){
+ const e=ui.edit;
+ const form=e?`<section class="panel"><h2>${S.items.some(i=>i.id===e.id)?'Edit item':'New item'}</h2>
+ <label class="f">Item<input type="text" id="in" value="${esc(e.name)}" placeholder="Underwear"></label>
+ <label class="f">Category<input type="text" id="ic" list="cats" value="${esc(e.cat)}" placeholder="Clothes"></label>
+ <datalist id="cats">${[...new Set(S.items.map(i=>i.cat).filter(Boolean))].map(c=>`<option value="${esc(c)}">`).join('')}</datalist>
+ <label class="f">How many?<select id="im"><option value="fixed" ${e.mode==='fixed'?'selected':''}>A fixed amount per trip</option><option value="per" ${e.mode==='per'?'selected':''}>Based on trip length</option></select></label>
+ <div class="row"><label class="f">${e.mode==='fixed'?'Amount':'Amount each period'}<input type="number" id="iq" min="1" value="${e.qty}"></label>
+ ${e.mode==='per'?`<label class="f">Per how many days<input type="number" id="ie" min="1" value="${e.every}"></label>
+ <label class="f">Maximum (0 = no cap)<input type="number" id="ix" min="0" value="${e.cap}"></label>`:''}</div>
+ <p class="sentence" id="isent">${sentence(e)}</p>
+ <div class="f" style="margin-bottom:0">Take it on</div>
+ <div class="chips"><button class="chip" data-act="etag" data-v="" aria-pressed="${!e.tags.length}">Every trip</button>
+ ${S.tags.map(g=>`<button class="chip" data-act="etag" data-v="${esc(g)}" aria-pressed="${e.tags.includes(g)}">${esc(g)}</button>`).join('')}</div>
+ <p class="hint" style="margin-top:-6px">Pick one or more trip types, or leave on every trip.</p>
+ <button class="btn" data-act="saveitem">Save item</button> <button class="btn ghost" data-act="cancel">Cancel</button></section>`:'';
+ const cats=group(S.items.map(i=>({...i,cat:i.cat||'Other'})));
+ return form+`<section class="panel"><div class="top"><h2>My items</h2><button class="btn sun sm" data-act="new">Add item</button></div>
+ ${cats.map(([cat,xs])=>`<div class="cat"><h3>${esc(cat)}</h3>${xs.map(i=>`<div class="item"><div class="t"><b>${esc(i.name)}</b><small>${esc(describe(i))}</small></div>
+ <button class="btn sm ghost" data-act="edit" data-v="${i.id}">Edit</button><button class="btn sm ghost x" data-act="delitem" data-v="${i.id}" aria-label="Delete ${esc(i.name)}">Delete</button></div>`).join('')}</div>`).join('')||'<p class="hint">No items yet. Add the things you always or sometimes pack.</p>'}</section>
+ <section class="panel"><h2>Trip types</h2><div class="chips">${S.tags.map(g=>`<button class="chip" data-act="deltag" data-v="${esc(g)}" title="Remove ${esc(g)}">${esc(g)} ✕</button>`).join('')}</div>
+ <div class="row"><input type="text" id="nt" placeholder="e.g. Camping" style="margin:0"><button class="btn" data-act="addtag" style="flex:0 0 auto">Add type</button></div></section>`}
+
+function render(){
+ document.querySelectorAll('nav button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tab===ui.tab));
+ const a=document.getElementById('app');
+ a.innerHTML=ui.tab==='trips'?tripsView():itemsView();
+}
+const val=id=>{const e=document.getElementById(id);return e?e.value:''};
+const grab=()=>{ // keep typed values before re-render
+ if(ui.tab==='trips'&&!ui.open){ui.draft.name=val('tn');ui.draft.days=Math.max(1,+val('td')||1)}
+ if(ui.tab==='items'&&ui.edit&&document.getElementById('in')){const e=ui.edit;e.name=val('in');e.cat=val('ic');e.mode=val('im');e.qty=Math.max(1,+val('iq')||1);
+  if(e.mode==='per'){e.every=Math.max(1,+val('ie')||1);e.cap=Math.max(0,+val('ix')||0)}}
+};
+const toggle=(arr,v)=>arr.includes(v)?arr.filter(x=>x!==v):[...arr,v];
+
+document.addEventListener('click',ev=>{
+ const tb=ev.target.closest('[data-tab]');
+ if(tb){grab();ui.tab=tb.dataset.tab;ui.open=null;return render()}
+ const b=ev.target.closest('[data-act]');if(!b||b.type==='checkbox')return;
+ const act=b.dataset.act,v=b.dataset.v;grab();
+ const trip=S.trips.find(t=>t.id===ui.open);
+ if(act==='dtag')ui.draft.tags=toggle(ui.draft.tags,v);
+ else if(act==='gen'){const d=ui.draft;const t={id:uid(),name:d.name.trim(),days:d.days,tags:[...d.tags],checked:{}};t.list=gen(t);S.trips.unshift(t);ui.open=t.id;ui.draft={name:'',days:7,tags:[]}}
+ else if(act==='open')ui.open=v;
+ else if(act==='back')ui.open=null;
+ else if(act==='deltrip'){if(!confirm('Delete this trip?'))return;S.trips=S.trips.filter(t=>t.id!==v)}
+ else if(act==='refresh'&&trip){trip.list=gen(trip)}
+ else if(act==='copy'&&trip){const txt=trip.name+' ('+trip.days+' days)\n'+group(trip.list).map(([c,xs])=>'\n'+c+'\n'+xs.map(x=>(trip.checked[x.id]?'[x] ':'[ ] ')+x.qty+'× '+x.name).join('\n')).join('\n');
+  try{navigator.clipboard.writeText(txt);b.textContent='Copied'}catch(e){b.textContent='Copy failed'};return}
+ else if(act==='new')ui.edit={id:uid(),name:'',cat:'',mode:'fixed',qty:1,every:1,cap:0,tags:[]};
+ else if(act==='edit')ui.edit={...S.items.find(i=>i.id===v),tags:[...S.items.find(i=>i.id===v).tags]};
+ else if(act==='etag')ui.edit.tags=v===''?[]:toggle(ui.edit.tags,v);
+ else if(act==='cancel')ui.edit=null;
+ else if(act==='saveitem'){const e=ui.edit;if(!e.name.trim()){document.getElementById('in').focus();return}
+  e.name=e.name.trim();e.cat=e.cat.trim();const i=S.items.findIndex(x=>x.id===e.id);i>=0?S.items[i]=e:S.items.push(e);ui.edit=null}
+ else if(act==='delitem'){S.items=S.items.filter(i=>i.id!==v)}
+ else if(act==='addtag'){const n=val('nt').trim();if(n&&!S.tags.includes(n))S.tags.push(n)}
+ else if(act==='deltag'){if(!confirm('Remove trip type "'+v+'"? Items limited to it will then go on every trip.'))return;
+  S.tags=S.tags.filter(g=>g!==v);S.items.forEach(i=>i.tags=i.tags.filter(g=>g!==v));ui.draft.tags=ui.draft.tags.filter(g=>g!==v)}
+ save();render();
+});
+document.addEventListener('input',ev=>{
+ if(['iq','ie','ix'].includes(ev.target.id)){grab();const s=document.getElementById('isent');if(s)s.innerHTML=sentence(ui.edit)}
+});
+document.addEventListener('change',ev=>{
+ const t=ev.target;
+ if(t.dataset.act==='chk'){const trip=S.trips.find(x=>x.id===ui.open);trip.checked[t.dataset.v]=t.checked;save();render()}
+ else if(t.id==='im'){grab();render()}
+ else if(t.id==='td'){grab();render()}
+});
+document.getElementById('app').innerHTML='<p class="hint">Loading…</p>';
+load().then(render);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!ui.edit)load().then(render)});
+</script>
+</body>
+</html>
